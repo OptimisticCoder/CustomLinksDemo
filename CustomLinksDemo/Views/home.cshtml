@@ -1,0 +1,77 @@
+﻿@inherits Nancy.ViewEngines.Razor.NancyRazorViewBase<IEnumerable<CustomLinksDemo.Models.Link>>
+@using System.Linq
+@using CustomLinksDemo.Models
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Custom Links Demo</title>
+
+    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css">
+    <link href="css/styles.css" rel="stylesheet">
+</head>
+<body>
+    <h1>Custom Links Demo</h1>
+
+    @* start rendering custom links tree *@
+    <div id="custom-links">
+        <div>
+            <ul class="custom-menu">
+                @foreach (var topLevel in Model.Where(r => r.ParentId == -1))
+                {
+                    var children = Model.Count(c => c.ParentId == topLevel.Id);
+                    <li>
+                        <a href="@(String.IsNullOrEmpty(topLevel.Url) ? "javascript:void(0)" : topLevel.Url)" class="link-title" target="_blank">
+                            @topLevel.Title
+                            @if (children > 0 && String.IsNullOrEmpty(topLevel.Url))
+                            {
+                                <span>&nbsp; <i class="fa fa-angle-double-right"></i></span>
+                            }
+                        </a>
+                    @recursiveLinks(topLevel)
+                </li>
+                }
+            </ul>
+        </div>
+    </div>
+    @* end of custom links tree *@
+
+    <script src="https://code.jquery.com/jquery-3.0.0.min.js" integrity="sha256-JmvOoLtYsmqlsWxa7mDSLMwa6dZ9rrIdtrrVYRnDRH0=" crossorigin="anonymous"></script>
+    <script src="/scripts/custom-links-jquery-plugin.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        $(function () {
+            $('#custom-links').customLinks();
+        });
+    </script>
+</body>
+</html>
+
+@* custom tree helper *@
+@helper  recursiveLinks(Link current)
+{
+    var currentChildren = Model.Count(c => c.ParentId == current.Id);
+    if(currentChildren > 0)
+    { 
+    <ul class="sub-menu hidden">
+        @foreach (var link in Model)
+        {
+            if (link.ParentId == current.Id)
+            {
+                var children = Model.Count(c => c.ParentId == link.Id);
+                <li>
+                    <a href="@(String.IsNullOrEmpty(link.Url) ? "javascript:void(0)" : link.Url)" class="link-title @(String.IsNullOrEmpty(link.Url) ? "" : "link")" title="@link.Title" target="_blank">
+                        @link.Title
+                        @if (children > 0 && String.IsNullOrEmpty(link.Url))
+                        {
+                            <span>&nbsp; <i class="fa fa-angle-double-right"></i></span>
+                        }
+                    </a>
+                    @recursiveLinks(link)
+                </li>
+            }
+        }
+    </ul>
+    }
+}
